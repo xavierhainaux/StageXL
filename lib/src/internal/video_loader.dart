@@ -15,17 +15,25 @@ class VideoLoader {
 
   StreamSubscription _onCanPlaySubscription;
   StreamSubscription _onErrorSubscription;
+  Timer _accessReadyStateTimer;
 
   VideoLoader(List<String> urls, bool loadData, bool corsEnabled) {
 
     if (corsEnabled) video.crossOrigin = 'anonymous';
 
-    _onCanPlaySubscription = video.onCanPlay.listen((e) => _loadDone());
+    _onCanPlaySubscription = video.onCanPlayThrough.listen((e) => _loadDone());
     _onErrorSubscription = video.onError.listen((e) => _loadNextUrl());
 
     _urls.addAll(urls);
     _loadData = loadData;
     _loadNextUrl();
+
+    // There is a realy weird bug with IE11. Sometimes, the onCanPlay event
+    // doesn't fire. Just accessing the readyState of the video seems to
+    // bypass the bug
+    _accessReadyStateTimer = new Timer.periodic(const Duration(seconds: 1), (_) {
+      video.readyState; // just access the property seems enough
+    });
   }
 
   Future<VideoElement> get done => _completer.future;
@@ -45,12 +53,14 @@ class VideoLoader {
   void _loadFailed() {
     _onCanPlaySubscription.cancel();
     _onErrorSubscription.cancel();
+    _accessReadyStateTimer.cancel();
     _completer.completeError(new StateError("Failed to load video."));
   }
 
   void _loadDone() {
     _onCanPlaySubscription.cancel();
     _onErrorSubscription.cancel();
+    _accessReadyStateTimer.cancel();
     _completer.complete(video);
   }
 
