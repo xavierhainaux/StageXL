@@ -104,6 +104,7 @@ class Video {
     Completer<Video> completer = new Completer<Video>();
     StreamSubscription onCanPlaySubscription = null;
     StreamSubscription onErrorSubscription = null;
+    Timer accessReadyStateTimer;
 
     void onCanPlay(e) {
       var video = new Video._(videoElement);
@@ -111,14 +112,23 @@ class Video {
       video.muted = this.muted;
       onCanPlaySubscription.cancel();
       onErrorSubscription.cancel();
+      accessReadyStateTimer.cancel();
       completer.complete(video);
     }
 
     void onError(e) {
       onCanPlaySubscription.cancel();
       onErrorSubscription.cancel();
+      accessReadyStateTimer.cancel();
       completer.completeError(e);
     }
+
+    // There is a realy weird bug with IE11. Sometimes, the onCanPlay event
+    // doesn't fire. Just accessing the readyState of the video seems to
+    // bypass the bug
+    accessReadyStateTimer = new Timer.periodic(const Duration(milliseconds: 10), (_) {
+      videoElement.readyState;
+    });
 
     onCanPlaySubscription = videoElement.onCanPlay.listen(onCanPlay);
     onErrorSubscription = videoElement.onError.listen(onError);
