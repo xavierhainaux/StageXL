@@ -24,7 +24,14 @@ class WebAudioApiSoundChannel extends SoundChannel {
     _sourceNode.loopStart = startTime;
     _sourceNode.loopEnd = startTime + duration;
     _sourceNode.connectNode(_webAudioApiMixer.inputNode);
-    _sourceNode.start(0, startTime, duration);
+
+    //TODO(xha): pas besoin de condition quand le bug de chrome sera corrigé:
+    //https://code.google.com/p/chromium/issues/detail?id=457099
+    if (loop) {
+      _sourceNode.start(0);
+    } else {
+      _sourceNode.start(0, startTime, duration);
+    }
   }
 
   //-------------------------------------------------------------------------------------------------
