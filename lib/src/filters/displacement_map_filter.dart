@@ -1,4 +1,12 @@
-part of stagexl.filters;
+library stagexl.filters.displacement_map;
+
+import 'dart:html' show ImageData;
+import 'dart:typed_data';
+
+import '../display.dart';
+import '../engine.dart';
+import '../geom.dart';
+import '../internal/tools.dart';
 
 class DisplacementMapFilter extends BitmapFilter {
 
@@ -91,27 +99,28 @@ class DisplacementMapFilter extends BitmapFilter {
     renderTextureQuad.putImageData(dstImageData);
   }
 
-  //-------------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
 
   void renderFilter(RenderState renderState, RenderTextureQuad renderTextureQuad, int pass) {
+
     RenderContextWebGL renderContext = renderState.renderContext;
     RenderTexture renderTexture = renderTextureQuad.renderTexture;
-    _DisplacementMapProgram displacementMapProgram = _DisplacementMapProgram.instance;
 
-    renderContext.activateRenderProgram(displacementMapProgram);
-    renderContext.activateRenderTexture(renderTexture);
-    bitmapData.renderTexture.activate(renderContext, gl.TEXTURE1);
-    displacementMapProgram.configure(this, renderTextureQuad);
-    displacementMapProgram.renderQuad(renderState, renderTextureQuad);
+    DisplacementMapFilterProgram renderProgram = renderContext.getRenderProgram(
+        r"$DisplacementMapFilterProgram", () => new DisplacementMapFilterProgram());
+
+    renderContext.activateRenderProgram(renderProgram);
+    renderContext.activateRenderTextureAt(renderTexture, 0);
+    renderContext.activateRenderTextureAt(bitmapData.renderTexture, 1);
+    renderProgram.configure(this, renderTextureQuad);
+    renderProgram.renderQuad(renderState, renderTextureQuad);
   }
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 
-class _DisplacementMapProgram extends BitmapFilterProgram {
-
-  static final _DisplacementMapProgram instance = new _DisplacementMapProgram();
+class DisplacementMapFilterProgram extends BitmapFilterProgram {
 
   String get fragmentShaderSource => """
       precision mediump float;
@@ -146,9 +155,9 @@ class _DisplacementMapProgram extends BitmapFilterProgram {
 
     var uMapScaleX = displacementMapFilter.scaleX / renderTextureQuad.textureWidth;
     var uMapScaleY = displacementMapFilter.scaleY / renderTextureQuad.textureHeight;
-    var uMapMatrixLocation = uniformLocations["uMapMatrix"];
-    var uMapSamplerLocation = uniformLocations["uMapSampler"];
-    var uMapScaleLocation = uniformLocations["uMapScale"];
+    var uMapMatrixLocation = uniforms["uMapMatrix"];
+    var uMapSamplerLocation = uniforms["uMapSampler"];
+    var uMapScaleLocation = uniforms["uMapScale"];
 
     renderingContext.uniformMatrix3fv(uMapMatrixLocation, false, uMapMatrix);
     renderingContext.uniform1i(uMapSamplerLocation, 1);

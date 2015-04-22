@@ -1,4 +1,11 @@
-part of stagexl.filters;
+library stagexl.filters.chroma_key;
+
+import 'dart:html' show ImageData;
+
+import '../display.dart';
+import '../engine.dart';
+import '../geom.dart';
+import '../internal/tools.dart';
 
 /// This filter provide a simple ChromaKey solution
 ///  that can be aplied on bitmap or video
@@ -29,7 +36,10 @@ class ChromaKeyFilter extends BitmapFilter {
   int _solidThreshold;
   int _invisibleThreshold;
 
-  ChromaKeyFilter({int backgroundColor: 0xFF00FF00, int solidThreshold: 140, int invisibleThreshold: 20}) {
+  ChromaKeyFilter({
+    int backgroundColor: 0xFF00FF00,
+    int solidThreshold: 140,
+    int invisibleThreshold: 20}) {
 
     if (invisibleThreshold < 0) {
       throw new ArgumentError("The minimum solidThreshold is 0.");
@@ -65,9 +75,12 @@ class ChromaKeyFilter extends BitmapFilter {
     _invisibleThreshold = invisibleThreshold;
   }
 
-  BitmapFilter clone() => new ChromaKeyFilter(backgroundColor: _backgroundColor, solidThreshold: _solidThreshold, invisibleThreshold: _invisibleThreshold);
+  BitmapFilter clone() => new ChromaKeyFilter(
+      backgroundColor: _backgroundColor,
+      solidThreshold: _solidThreshold,
+      invisibleThreshold: _invisibleThreshold);
 
-  //-------------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
 
   void apply(BitmapData bitmapData, [Rectangle<int> rectangle]) {
 
@@ -80,26 +93,27 @@ class ChromaKeyFilter extends BitmapFilter {
     renderTextureQuad.putImageData(imageData);
   }
 
-  //-------------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
 
   void renderFilter(RenderState renderState, RenderTextureQuad renderTextureQuad, int pass) {
+
     RenderContextWebGL renderContext = renderState.renderContext;
     RenderTexture renderTexture = renderTextureQuad.renderTexture;
-    _ChromaKeyProgram chromaKeyProgram = _ChromaKeyProgram.instance;
 
-    renderContext.activateRenderProgram(chromaKeyProgram);
+    ChromaKeyFilterProgram renderProgram = renderContext.getRenderProgram(
+        r"$ChromaKeyFilterProgram", () => new ChromaKeyFilterProgram());
+
+    renderContext.activateRenderProgram(renderProgram);
     renderContext.activateRenderTexture(renderTexture);
-    chromaKeyProgram.configure(backgroundColor, solidThreshold, invisibleThreshold);
-    chromaKeyProgram.renderQuad(renderState, renderTextureQuad);
+    renderProgram.configure(backgroundColor, solidThreshold, invisibleThreshold);
+    renderProgram.renderQuad(renderState, renderTextureQuad);
   }
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 
-class _ChromaKeyProgram extends BitmapFilterProgram {
-
-  static final _ChromaKeyProgram instance = new _ChromaKeyProgram();
+class ChromaKeyFilterProgram extends BitmapFilterProgram {
 
   String get fragmentShaderSource =>  """
       precision mediump float;
@@ -164,13 +178,13 @@ class _ChromaKeyProgram extends BitmapFilterProgram {
     num g = colorGetG(backgroundColor) / 255.0;
     num b = colorGetB(backgroundColor) / 255.0;
 
-    renderingContext.uniform4f(uniformLocations["backgroundColor"], r, g, b, 1.0);
+    renderingContext.uniform4f(uniforms["backgroundColor"], r, g, b, 1.0);
 
-    renderingContext.uniform1f(uniformLocations["solidThreshold"], solidThreshold / 255.0);
-    renderingContext.uniform1f(uniformLocations["invisibleThreshold"], invisibleThreshold / 255.0);
+    renderingContext.uniform1f(uniforms["solidThreshold"], solidThreshold / 255.0);
+    renderingContext.uniform1f(uniforms["invisibleThreshold"], invisibleThreshold / 255.0);
 
     // this affect the color corection on semi transparent pixel, for now not public
     // it is quite experimental
-    renderingContext.uniform1f(uniformLocations["weight"], 0.8);
+    renderingContext.uniform1f(uniforms["weight"], 0.8);
   }
 }
