@@ -48,6 +48,16 @@ class Juggler implements Animatable {
 
   num get elapsedTime => _elapsedTime;
 
+  int get length {
+    int length = 0;
+    var link = _firstAnimatableLink;
+    while (identical(link, _lastAnimatableLink) == false) {
+      link = link.nextAnimatableLink;
+      ++length;
+    }
+    return length;
+  }
+
   //----------------------------------------------------------------------------
 
   /// Adds the [animatable] to this juggler who will take care that it is
