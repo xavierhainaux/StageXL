@@ -3,8 +3,11 @@ part of stagexl.media;
 class WebAudioApiSound extends Sound {
 
   AudioBuffer _audioBuffer;
+  WebAudioApiMixer _mixer;
 
-  WebAudioApiSound._(AudioBuffer audioBuffer) : _audioBuffer = audioBuffer;
+  WebAudioApiSound._(AudioBuffer audioBuffer, WebAudioApiMixer mixer) :
+    _audioBuffer = audioBuffer,
+    _mixer = mixer;
 
   //---------------------------------------------------------------------------
 
@@ -15,14 +18,14 @@ class WebAudioApiSound extends Sound {
     }
 
     var audioUrls = soundLoadOptions.getOptimalAudioUrls(url);
-    var audioContext = WebAudioApiMixer.audioContext;
 
     for(var audioUrl in audioUrls) {
       try {
         var httpRequest = await HttpRequest.request(audioUrl, responseType: 'arraybuffer');
         var audioData = httpRequest.response;
-        var audioBuffer = await audioContext.decodeAudioData(audioData);
-        return new WebAudioApiSound._(audioBuffer);
+        var mixer = new WebAudioApiMixer();
+        var audioBuffer = await WebAudioApiMixer.audioContext.decodeAudioData(audioData);
+        return new WebAudioApiSound._(audioBuffer, mixer);
       } catch (e) {
         // ignore error
       }
@@ -39,7 +42,6 @@ class WebAudioApiSound extends Sound {
 
   static Future<Sound> loadDataUrl(String dataUrl) async {
 
-    var audioContext = WebAudioApiMixer.audioContext;
     var byteString = window.atob(dataUrl.split(',')[1]);
     var bytes = new Uint8List(byteString.length);
 
@@ -49,8 +51,9 @@ class WebAudioApiSound extends Sound {
 
     try {
       var audioData = bytes.buffer;
-      var audioBuffer = await audioContext.decodeAudioData(audioData);
-      return new WebAudioApiSound._(audioBuffer);
+      var mixer = new WebAudioApiMixer();
+      var audioBuffer = await WebAudioApiMixer.audioContext.decodeAudioData(audioData);
+      return new WebAudioApiSound._(audioBuffer, mixer);
     } catch (e) {
       throw new StateError("Failed to load audio.");
     }
