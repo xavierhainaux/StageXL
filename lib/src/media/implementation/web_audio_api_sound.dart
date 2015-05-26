@@ -12,7 +12,6 @@ class WebAudioApiSound extends Sound {
   //---------------------------------------------------------------------------
 
   static Future<Sound> load(String url, [SoundLoadOptions soundLoadOptions]) async {
-
     if (soundLoadOptions == null) {
       soundLoadOptions = Sound.defaultLoadOptions;
     }
@@ -23,7 +22,7 @@ class WebAudioApiSound extends Sound {
       try {
         var httpRequest = await HttpRequest.request(audioUrl, responseType: 'arraybuffer');
         var audioData = httpRequest.response;
-        var mixer = new WebAudioApiMixer();
+        var mixer = new WebAudioApiMixer(SoundMixer._webAudioApiMixer.inputNode);
         var audioBuffer = await WebAudioApiMixer.audioContext.decodeAudioData(audioData);
         return new WebAudioApiSound._(audioBuffer, mixer);
       } catch (e) {
@@ -51,7 +50,7 @@ class WebAudioApiSound extends Sound {
 
     try {
       var audioData = bytes.buffer;
-      var mixer = new WebAudioApiMixer();
+      var mixer = new WebAudioApiMixer(SoundMixer._webAudioApiMixer.inputNode);
       var audioBuffer = await WebAudioApiMixer.audioContext.decodeAudioData(audioData);
       return new WebAudioApiSound._(audioBuffer, mixer);
     } catch (e) {
