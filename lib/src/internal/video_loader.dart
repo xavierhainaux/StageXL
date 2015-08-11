@@ -22,10 +22,7 @@ class VideoLoader {
     if (corsEnabled) video.crossOrigin = 'anonymous';
 
     _onCanPlaySubscription = video.onCanPlayThrough.listen((e) => _loadDone());
-    _onErrorSubscription = video.onError.listen((e) {
-      print('[StageXL] Video error: $e');
-      _loadFailed();
-    });
+    _onErrorSubscription = video.onError.listen((e) => _loadNextUrl());
 
     _urls.addAll(urls);
     _loadData = loadData;
@@ -79,8 +76,7 @@ class VideoLoader {
         }
       });
     }).catchError((error) {
-      print('[StageXL] Error while requesting video: $error');
-      _loadFailed();
+      _loadNextUrl();
     });
   }
 
