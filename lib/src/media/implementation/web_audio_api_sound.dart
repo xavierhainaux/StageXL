@@ -3,11 +3,8 @@ part of stagexl.media;
 class WebAudioApiSound extends Sound {
 
   AudioBuffer _audioBuffer;
-  WebAudioApiMixer _mixer;
 
-  WebAudioApiSound._(AudioBuffer audioBuffer, WebAudioApiMixer mixer) :
-    _audioBuffer = audioBuffer,
-    _mixer = mixer;
+  WebAudioApiSound._(AudioBuffer audioBuffer) : _audioBuffer = audioBuffer;
 
   //---------------------------------------------------------------------------
 
@@ -17,14 +14,14 @@ class WebAudioApiSound extends Sound {
     }
 
     var audioUrls = soundLoadOptions.getOptimalAudioUrls(url);
+    var audioContext = WebAudioApiMixer.audioContext;
 
     for(var audioUrl in audioUrls) {
       try {
         var httpRequest = await HttpRequest.request(audioUrl, responseType: 'arraybuffer');
         var audioData = httpRequest.response;
-        var mixer = new WebAudioApiMixer(SoundMixer._webAudioApiMixer.inputNode);
-        var audioBuffer = await WebAudioApiMixer.audioContext.decodeAudioData(audioData);
-        return new WebAudioApiSound._(audioBuffer, mixer);
+        var audioBuffer = await audioContext.decodeAudioData(audioData);
+        return new WebAudioApiSound._(audioBuffer);
       } catch (e) {
         // ignore error
       }
@@ -41,6 +38,7 @@ class WebAudioApiSound extends Sound {
 
   static Future<Sound> loadDataUrl(String dataUrl) async {
 
+    var audioContext = WebAudioApiMixer.audioContext;
     var byteString = window.atob(dataUrl.split(',')[1]);
     var bytes = new Uint8List(byteString.length);
 
@@ -50,9 +48,8 @@ class WebAudioApiSound extends Sound {
 
     try {
       var audioData = bytes.buffer;
-      var mixer = new WebAudioApiMixer(SoundMixer._webAudioApiMixer.inputNode);
-      var audioBuffer = await WebAudioApiMixer.audioContext.decodeAudioData(audioData);
-      return new WebAudioApiSound._(audioBuffer, mixer);
+      var audioBuffer = await audioContext.decodeAudioData(audioData);
+      return new WebAudioApiSound._(audioBuffer);
     } catch (e) {
       throw new StateError("Failed to load audio.");
     }
