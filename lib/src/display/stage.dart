@@ -16,6 +16,7 @@ class Stage extends DisplayObjectContainer {
   static num devicePixelRatio = env.devicePixelRatio;
   static num textFieldPixelRatio = Stage.autoHiDpi ? Stage.devicePixelRatio : 1.0;
   static num cachePixelRatio = Stage.autoHiDpi ? Stage.devicePixelRatio : 1.0;
+  static Function textFieldPixelRatioGetter;
 
   CanvasElement _canvas;
   RenderContext _renderContext;

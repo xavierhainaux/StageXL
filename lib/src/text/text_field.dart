@@ -506,6 +506,12 @@ class TextField extends InteractiveObject {
 
   //-------------------------------------------------------------------------------------------------
 
+  removeCache() {
+    super.removeCache();
+    _renderTexture = null;
+    _refreshPending = 3;
+  }
+
   _refreshCache() {
 
     if ((_refreshPending & 2) == 0) {
@@ -515,6 +521,10 @@ class TextField extends InteractiveObject {
     }
 
     var pixelRatio = Stage.textFieldPixelRatio;
+    if (Stage.textFieldPixelRatioGetter != null) {
+      pixelRatio = Stage.textFieldPixelRatioGetter(this);
+    }
+
     var width = max(1, _width).ceil();
     var height =  max(1, _height).ceil();
 
