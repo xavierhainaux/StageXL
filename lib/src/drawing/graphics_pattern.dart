@@ -23,8 +23,11 @@ class GraphicsPattern {
   CanvasPattern getCanvasPattern(CanvasRenderingContext2D context) {
     var renderTexture = renderTextureQuad.renderTexture;
 
-    //TODO(xha): continue to pass renderTexture.source when Dartium bug is fixed:
-    https://code.google.com/p/dart/issues/detail?id=23297
-    return context.createPattern(renderTexture.canvas, repeatOption);
+    var source = renderTexture.source;
+    if (source is ImageElement) {
+      return context.createPatternFromImage(source, repeatOption);
+    } else {
+      return context.createPattern(source, repeatOption);
+    }
   }
 }

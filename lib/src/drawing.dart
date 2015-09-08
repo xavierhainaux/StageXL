@@ -1,7 +1,7 @@
 library stagexl.drawing;
 
 import 'dart:math' hide Point, Rectangle;
-import 'dart:html' show CanvasElement, CanvasRenderingContext2D, CanvasGradient, CanvasPattern;
+import 'dart:html' show CanvasElement, CanvasRenderingContext2D, CanvasGradient, CanvasPattern, ImageElement;
 
 import 'geom.dart';
 import 'engine.dart';
